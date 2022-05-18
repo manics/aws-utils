@@ -1,0 +1,14 @@
+# Rename this to aws-sso-update-config.yaml
+
+sso_region: REGION
+
+default_config:
+  sso_start_url: https://APPLICATION-URL.awsapps.com/start#/
+  sso_region: REGION
+  sso_role_name: AdministratorAccess
+  region: REGION
+  output: json
+
+aliases:
+  aws-account1-name: alias1
+  aws-account2-name: alias2

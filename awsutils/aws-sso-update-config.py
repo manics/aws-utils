@@ -41,11 +41,18 @@ def add_if_not_found(config, account_name, account_id, util_config):
 
 
 def get_sso_accounts(cache_dir, util_config):
-    sso_cache = list(
+    sso_caches = list(
         Path(cache_dir).glob("????????????????????????????????????????.json")
-    )[0]
-    with sso_cache.open() as f:
-        access_token = json.load(f)["accessToken"]
+    )
+    access_token = None
+    for sso_cache in sso_caches:
+        try:
+            with sso_cache.open() as f:
+                access_token = json.load(f)["accessToken"]
+        except KeyError:
+            continue
+    if not access_token:
+        raise Exception(f"No SSO access token found in {cache_dir}")
     sso = boto3.client("sso", region_name=util_config["sso_region"])
     accounts = sso.list_accounts(maxResults=1000, accessToken=access_token)
     return accounts["accountList"]
@@ -67,7 +74,7 @@ def generate_aws_config(replace, util_config):
         #     print(f"Added {account['accountName']} {account['accountId']}")
 
     # Order alphabetically
-    # WARNING: This relies on an internal ConfirParser implmentation detail
+    # WARNING: This relies on an internal ConfigParser implementation detail
     for section in config._sections:
         config._sections[section] = dict(
             sorted(config._sections[section].items(), key=lambda t: t[0])

@@ -30,11 +30,12 @@ def get_aws_config(config_file):
     return config
 
 
-def add_if_not_found(config, account_name, account_id, util_config):
+def add_if_not_found(config, account_name, account_id, role, util_config):
     profile = f"profile {account_name}"
     if profile not in config:
         conf = util_config["default_config"].copy()
         conf["sso_account_id"] = account_id
+        conf["sso_role_name"] = role
         config[profile] = conf
         return conf
     return None
@@ -55,6 +56,11 @@ def get_sso_accounts(cache_dir, util_config):
         raise Exception(f"No SSO access token found in {cache_dir}")
     sso = boto3.client("sso", region_name=util_config["sso_region"])
     accounts = sso.list_accounts(maxResults=1000, accessToken=access_token)
+    for account in accounts["accountList"]:
+        roles = sso.list_account_roles(
+            maxResults=100, accessToken=access_token, accountId=account["accountId"]
+        )
+        account["roles"] = [r["roleName"] for r in roles["roleList"]]
     return accounts["accountList"]
 
 
@@ -64,6 +70,9 @@ def normalise_account_name(name):
 
 
 def generate_aws_config(replace, util_config):
+    sso_role_names = util_config["sso_role_names"]
+    if not sso_role_names:
+        sso_role_names = [util_config["sso_role_name"]["sso_role_names"]]
     if replace:
         config_file = None
     else:
@@ -72,14 +81,20 @@ def generate_aws_config(replace, util_config):
     accounts = get_sso_accounts(cache_dir, util_config)
 
     for account in accounts:
+        for role in sso_role_names:
+            if role in account["roles"]:
+                break
+        else:
+            raise ValueError(f"role {sso_role_names} not found in {account}")
         r = add_if_not_found(
             config,
             normalise_account_name(account["accountName"]),
             account["accountId"],
+            role,
             util_config,
         )
         # if r:
-        #     print(f"Added {account['accountName']} {account['accountId']}")
+        #     print(f"Added {account}")
 
     # Order alphabetically
     # WARNING: This relies on an internal ConfigParser implementation detail

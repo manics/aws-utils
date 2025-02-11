@@ -5,10 +5,17 @@ sso_region: REGION
 default_config:
   sso_start_url: https://APPLICATION-URL.awsapps.com/start#/
   sso_region: REGION
-  sso_role_name: AdministratorAccess
+  sso_role_name: ""
   region: REGION
   output: json
 
+# Use an alternative profile name for some accounts
 aliases:
   aws-account1-name: alias1
   aws-account2-name: alias2
+
+# If non-empty ignore default_config.sso_role_name, try these role names in order
+sso_role_names:
+  - AWSAdministratorAccess
+  - AdministratorAccess
+  - AWSReadOnlyAccess

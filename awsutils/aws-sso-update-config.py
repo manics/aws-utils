@@ -58,6 +58,13 @@ def get_sso_accounts(cache_dir, util_config):
     return accounts["accountList"]
 
 
+def normalise_account_name(name):
+    name = name.lower()
+    if name.endswith("@dundee.ac.uk"):
+        name = name[:-13]
+    return name
+
+
 def generate_aws_config(replace, util_config):
     if replace:
         config_file = None
@@ -68,7 +75,7 @@ def generate_aws_config(replace, util_config):
 
     for account in accounts:
         r = add_if_not_found(
-            config, account["accountName"], account["accountId"], util_config
+            config, normalise_account_name(account["accountName"]), account["accountId"], util_config
         )
         # if r:
         #     print(f"Added {account['accountName']} {account['accountId']}")

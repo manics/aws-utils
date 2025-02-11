@@ -9,6 +9,7 @@ DEFAULT_TAGS_TO_COPY = [
     "Proj",
 ]
 
+
 # Tags keys are unique, but tags are returned as [{Key: key, Value: value}, ...]
 def tags_to_dict(tags):
     if tags:
